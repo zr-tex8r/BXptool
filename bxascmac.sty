@@ -4,14 +4,14 @@
 
 % COPYRIGHT NOTICE:
 %   This package is a modified version of tascmac.sty, authored by
-%   ASCII Corporation (now reorganized as ASCII MEDIA WORKS Inc.Åj
+%   ASCII Corporation (now reorganized as ASCII MEDIA WORKS Inc.Ôºâ
 %   and Impress Corporation.
 %   This package is distributed under the modified BSD license
 %   (the same as the original package).
 
 %%%% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxascmac}[2009/12/14 v0.2 BX ascmac]
+\ProvidesPackage{bxascmac}[2013/02/13 v0.3 BX ascmac]
 
 %%====================================================================
 %%  The following code is derived from tascgrp.sty <2006/07/14>.
@@ -39,7 +39,9 @@
 %%
 %% screen environment
 \newdimen\@scw
-\def\@hobox#1#2#3{\hbox to\@scw{\@oval(#3,#3)[#1]\hfil\@oval(#3,#3)[#2]}}
+\def\@hobox#1#2#3{\hbox to\@scw{\oval(#3,#3)[#1]\hfil\oval(#3,#3)[#2]%
+\dimen\z@=#3\unitlength\advance\dimen\z@\@wholewidth
+\vrule\@width\z@\@height\z@\@depth.5\dimen\z@}}
 \def\@vrf@#1#2{\vskip#1\leaders\vrule width#2\vfil\vskip#1}
 \def\screen{%
 \@ifnextchar[{\@screen}{\@screen[0]}}
@@ -60,8 +62,9 @@
 \thinlines\setlength{\unitlength}{1pt}\hrule\kern\@s%
 \@hobox{tl}{tr}{\@r}\kern-\@sx\box\scb@x\@hobox{bl}{br}{\@r}%
 \kern-.4pt\hrule}\hfil}\dimen0=\ht\scscb@x%
-\noindent\hbox to\linewidth{\hbox to.2pt{\vbox to\dimen0{\@vrf@{\@sx}{.4pt}}%
-\hss}\box\scscb@x\hbox to.25pt{\hss\vbox to\dimen0{\@vrf@{\@sx}{.4pt}}}\hss}}%
+\dimen2=\@sx\advance\dimen2 .2pt
+\noindent\hbox to\linewidth{\hbox to.2pt{\vbox to\dimen0{\@vrf@{\dimen2}{.4pt}}%
+\hss}\box\scscb@x\hbox to.2pt{\hss\vbox to\dimen0{\@vrf@{\dimen2}{.4pt}}}\hss}}%
 %% 
 %% itembox environment
 %%   replace \box0 with \@iboxstr; thanks FTEXers (1998/11/27)
@@ -83,8 +86,8 @@
     \space\if r\the\@iboxpos\else \@hleader\fi}\kern9.6pt
   \@hobox{tl}{tr}{20}\kern-10pt\box\scb@x\@hobox{bl}{br}{20}%
   \kern-.8pt\hrule height.8pt}\hfil}\dimen0=\ht\scscb@x%
-  \noindent\hbox to\linewidth{\hbox to.6pt{\vbox to\dimen0{\@vrf@{10pt}{.8pt}}%
-  \hss}\box\scscb@x\hbox to.6pt{\hss\vbox to\dimen0{\@vrf@{10pt}{.9pt}}}%
+  \noindent\hbox to\linewidth{\hbox to.4pt{\vbox to\dimen0{\@vrf@{10.4pt}{.8pt}}%
+  \hss}\box\scscb@x\hbox to.4pt{\hss\vbox to\dimen0{\@vrf@{10.4pt}{.8pt}}}%
   \hss}\egroup}
 %%
 %% \keytop
