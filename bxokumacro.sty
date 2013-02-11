@@ -1,0 +1,562 @@
+%
+% bxokumacro.sty
+%
+
+% COPYRIGHT NOTICE:
+%   This package is a modified version of okumacro.sty, authored by
+%   Haruhiko Okumura.
+%   This package is distributed under the modified BSD license
+%   (the same as the original package).
+
+%%%% package declaration
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bxokumacro}[2009/12/14 v0.2]
+
+%%%% preparation
+\def\bxok@pkgname{bxokumacro}
+\def\bxok@error{\PackageError\bxok@pkgname}
+\newif\ifbxok@etex
+\newif\ifbxok@xetex
+\newif\ifbxok@ptex
+\newif\ifbxok@uptex
+
+%%%% option handling
+%\let\bxok@bslmode\relax
+%\DeclareOption{yen}{\let\bxok@bslmode=y}
+%\ProcessOptions*
+
+%%------ preliminary definitions
+
+%% detect TeX engine
+\def\bxok@testfeat#1#2{%
+  \edef\bxok@tmpa{\string#1}\edef\bxok@tmpb{\meaning#1}%
+  \ifx\bxok@tmpa\bxok@tmpb #2\fi}
+\bxok@testfeat\eTeXversion\bxok@etextrue
+\bxok@testfeat\XeTeXversion\bxok@xetextrue
+\bxok@testfeat\tbaselineshift\bxok@ptextrue
+\bxok@testfeat\enablecjktoken\bxok@uptextrue
+
+%% \bxok@setzw
+\newdimen\bxok@zw
+\def\bxok@setzw{\bxok@zw=1em\relax}
+
+%% inter-cjk & inter-ascii-cjk glues
+\def\bxok@iiskip{\hskip\z@skip}
+\def\bxok@setiiglue#1{}
+\def\bxok@iaiskip{\hskip\z@skip}
+\def\bxok@setiaiglue#1{}
+\def\bxok@inhibitglue{\relax}
+\def\bxok@noautoxspacing{\relax}
+
+%% \bxProvideTextCommand
+\def\bxProvideTextCommand#1#2#3{%
+  \expandafter\ifx\csname #2\string#1\endcsname\relax
+    \DeclareTextCommand{#1}{#2}{#3}\fi}
+
+% Enable TS1 encoding.
+\AtBeginDocument{%
+  \expandafter\ifx\csname T@TS1\endcsname\relax
+    \input{ts1enc.def}\fi
+}
+
+%%------ main
+
+%%<*> \ruby
+\providecommand{\rubyfamily}{}
+\def\kanjistrut{\vrule \@height0.88\bxok@zw \@depth0.12\bxok@zw \@width\z@}
+\newcommand{\ruby}[3][0pt]{\bgroup
+  \leavevmode
+  \bxok@setzw
+  \bxok@setiiglue{0pt plus 2fil}%
+  \bxok@setiaiglue{0pt plus 2fil}%
+  \dimen1=#1\relax
+  \dimen3=\f@size\p@
+  \setbox1=\hbox{#2}%
+  \setbox3=\hbox{\rubyfamily\fontsize{0.5\dimen3}{0pt}\selectfont #3}%
+  \ifdim\dimen1=\z@
+    \ifdim\wd1>\wd3 \dimen1=\wd1 \else \dimen1=\wd3 \fi
+  \else
+    \ifdim\dimen1<\wd1
+      \dimen1=\wd1
+    \fi
+  \fi
+  \hbox{%
+    \vbox{%
+      \hbox to \dimen1{\rubyfamily
+        \fontsize{0.5\dimen3}{0pt}\selectfont\bxok@setzw \kanjistrut
+        \ifdim\dimen1<\wd3
+          \hss\unhbox3\hss
+        \else
+          \hfil\unhbox3\hfil
+        \fi
+      }%
+      \nointerlineskip
+      \hbox to \dimen1{\kanjistrut\hfil\unhbox1\hfil}}}%
+  \egroup}
+
+%% \bxDayOfWeek
+% Returns to \bxRes the day of the week for today.
+\def\bxDayOfWeek{{\@tempcnta=\year \@tempcntb=\month
+  \ifnum \@tempcntb<3
+    \advance \@tempcnta by -1
+    \advance \@tempcntb by 12
+  \fi
+  \multiply \@tempcntb by 13
+  \advance \@tempcntb by 8
+  \divide \@tempcntb by 5
+  \advance \@tempcntb by \@tempcnta
+  \divide \@tempcnta by 4
+  \advance \@tempcntb by \@tempcnta
+  \divide \@tempcnta by 25
+  \advance \@tempcntb by -\@tempcnta
+  \divide \@tempcnta by 4
+  \advance \@tempcntb by \@tempcnta
+  \advance \@tempcntb by \day
+  \@tempcnta=\@tempcntb
+  \divide \@tempcntb by 7
+  \multiply \@tempcntb by 7
+  \advance \@tempcnta by -\@tempcntb
+  \xdef\bxok@gtmp{\the\@tempcnta}}\let\bxRes\bxok@gtmp}
+
+\def\myallowbreak{\@ifnextchar\egroup{}{\penalty\exhyphenpenalty}{}}
+\begingroup
+  \catcode`\-=\active
+  \catcode`\.=\active
+  \catcode`\/=\active
+  \gdef\mytth@@k{%
+    \catcode`\-=\active \def-{\char`\-\myallowbreak}%
+    \catcode`\.=\active \def.{\char`\.\myallowbreak}%
+    \catcode`\/=\active \def/{\char`\/\myallowbreak}%
+  }
+\endgroup
+\def\mytt{\ttfamily
+  \bxok@mytt@hook
+  \catcode`\#=12
+  \catcode`\&=12
+  \catcode`\^=12
+  \catcode`\~=12
+  \catcode`\_=12
+  \chardef\{=`\{
+  \chardef\}=`\}
+  \chardef\_=`\_
+  \def\\{\bxok@mytt@bsl\penalty\exhyphenpenalty{}}%
+  \spaceskip=.32em plus.16em minus.09em
+  \frenchspacing
+  \bxok@noautoxspacing
+  \mytth@@k}
+\def\bxok@mytt@hook{%
+  \catcode`\~=\active \chardef~=`\~
+  \let\bxok@tilde=\~\def\~{\bxok@sel@accent\~\bxok@tilde}%
+  \let\bxok@hat  =\^\def\^{\bxok@sel@accent\^\bxok@hat}%
+}
+\def\bxok@sel@accent#1#2{%
+  \chardef\bxok@schr=`#1\let\bxok@sacc=#2\relax
+  \futurelet\bxok@tok\bxok@sel@accent@a}
+\def\bxok@sel@accent@a{%
+  \ifx\bxok@tok\bgroup \expandafter\bxok@sacc
+  \else \bxok@schr \fi}
+\def\bxok@mytt@bsl{\char`\\}
+\AtBeginDocument{%
+  \@ifpackageloaded{bxjsverb}%
+    {\def\bxok@mytt@bsl{\bxBSOrYen}}{}%
+}
+
+%%<*> \yen
+% Same definition as in bxjsverb.
+\AtBeginDocument{%
+  \bxProvideTextCommand{\textyen}{OT1}{{\ooalign{Y\crcr\hss=\hss}}}%
+  \bxProvideTextCommand{\textyen}{T1}{\UseTextSymbol{TS1}{\textyen}}%
+  \expandafter\ifx\csname T@EU1\endcsname\relax\else
+    \DeclareTextSymbol{\bx@m@synth@yen}{EU1}{"00A5}\fi
+  \providecommand*{\yen}{\textyen}%
+}
+
+%%<*> \BS
+\AtBeginDocument{%
+  \@ifpackageloaded{bxjsverb}{}%
+   {\providecommand*{\BS}{\texttt{\char`\\}}}
+}
+
+%%<*> \bslash
+{\catcode`\|=\z@ \catcode`\\=12|gdef|bslash{\}}
+
+%%<*> \asciibar
+% The broken vertical bar, NOT inside the ASCII range.
+\def\bxSynthBrokenBar{%
+  \makebox[0.525em]{\rule[-0.2ex]{0.15ex}{0.7ex}\kern-0.15ex
+    \rule[0.8ex]{0.15ex}{0.7ex}}}
+\AtBeginDocument{%
+  \bxProvideTextCommand{\textbrokenbar}{OT1}{\bxSynthBrokenBar}%
+  \bxProvideTextCommand{\textbrokenbar}{T1}%
+    {\UseTextSymbol{TS1}{\textbrokenbar}}%
+  \expandafter\ifx\csname T@EU1\endcsname\relax\else
+    \DeclareTextSymbol{\bx@m@synth@yen}{EU1}{"00A6}\fi
+  \providecommand*{\asciibar}{\textbrokenbar}}
+
+%%<*> \removept
+\newcommand{\removept}[2]{%
+  \edef#2{\expandafter\@removePT\the#1}}
+{\catcode`p=12 \catcode`t=12 \gdef\@removePT#1pt{#1}}
+
+%%<*> \keytop
+\newcommand{\okukeytop}[1]{{\leavevmode\kern1pt
+  \setbox1=\hbox{\normalfont\sffamily [}%
+  \dimen1=\ht1
+  \removept{\dimen1}{\tempC}%
+  \setbox0=\hbox{\normalfont\sffamily #1}%
+  \dp0=0pt
+  \dimen0=\wd0
+  \ifdim\dimen0<\ht1 \dimen0=\ht1 \fi
+  \advance \dimen0 by 5pt
+  \removept{\dimen0}{\tempA}%
+  \divide \dimen0 by 2
+  \removept{\dimen0}{\tempB}%
+  \unitlength=1pt
+  \advance \dimen1 by 2pt
+  \hbox{\vrule height\dimen1 depth2pt width0pt}%
+  \begin{picture}(\tempA,\tempC)
+    \put(0,0){\line(0,1){\tempC}}
+    \put(\tempA,0){\line(0,1){\tempC}}
+    \put(\tempB,0){\oval(\tempA,4)[b]}
+    \put(\tempB,\tempC){\oval(\tempA,4)[t]}
+    \put(\tempB,0){\makebox(0,0)[b]{\box0}}
+  \end{picture}\kern1pt}}
+\AtBeginDocument{%
+\providecommand*{\keytop}{\okukeytop}}
+
+%%<*> \return / \RETMARK
+\def\RETMARK{{\unitlength=1pt
+  \setbox0=\hbox{\normalfont\ttfamily [}%
+  \dimen0=\ht0
+  \removept{\dimen0}{\tempA}%
+  \advance \dimen0 by -1pt
+  \removept{\dimen0}{\tempB}%
+  \begin{picture}(\tempA,\tempA)
+    \put(\tempA,1){\line(0,1){\tempB}}
+    \put(\tempA,1){\vector(-1,0){\tempA}}
+  \end{picture}}}
+\newcommand{\okureturn}{\okukeytop{\RETMARK}}
+\AtBeginDocument{%
+\providecommand*{\return}{\okureturn}}
+
+%%<*> \upkey / \downkey / \rightkey / \leftkey
+\newcommand{\upkey}{\raisebox{-2pt}{%
+  \setlength{\unitlength}{1pt}%
+  \thinlines
+  \begin{picture}(14,9)
+    \put(7,2){\vector(0,1){8}}
+    \put(1,2){\line(0,1){7}}
+    \put(13,2){\line(0,1){7}}
+    \put(7,9){\oval(12,4)[t]}
+    \put(7,2){\oval(12,4)[b]}
+  \end{picture}%
+}}
+\newcommand{\downkey}{\raisebox{-2pt}{%
+  \setlength{\unitlength}{1pt}%
+  \thinlines
+  \begin{picture}(14,9)
+    \put(7,10){\vector(0,-1){8}}
+    \put(1,2){\line(0,1){7}}
+    \put(13,2){\line(0,1){7}}
+    \put(7,9){\oval(12,4)[t]}
+    \put(7,2){\oval(12,4)[b]}
+  \end{picture}%
+}}
+\newcommand{\rightkey}{\raisebox{-2pt}{%
+  \setlength{\unitlength}{1pt}%
+  \thinlines
+  \begin{picture}(14,9)
+    \put(3,6){\vector(1,0){8}}
+    \put(1,2){\line(0,1){7}}
+    \put(13,2){\line(0,1){7}}
+    \put(7,9){\oval(12,4)[t]}
+    \put(7,2){\oval(12,4)[b]}
+  \end{picture}%
+}}
+\newcommand{\leftkey}{\raisebox{-2pt}{%
+  \setlength{\unitlength}{1pt}%
+  \thinlines
+  \begin{picture}(14,9)
+    \put(11,6){\vector(-1,0){8}}
+    \put(1,2){\line(0,1){7}}
+    \put(13,2){\line(0,1){7}}
+    \put(7,9){\oval(12,4)[t]}
+    \put(7,2){\oval(12,4)[b]}
+  \end{picture}%
+}}
+
+%%<*> \MARU
+\newcommand{\MARU}[1]{{%
+    \ooalign{\hfil
+      \@ifundefined{scalebox}%
+       {#1\/\hfil\crcr\raise.167ex}
+       {\bxok@setzw\raise.1\bxok@zw
+        \hbox{\scalebox{0.8}{#1\/}}\hfil\crcr\raise.1\bxok@zw}%
+      \hbox{\fontencoding{OMS}\fontfamily{cmsy}\fontseries{m}%
+        \fontshape{n}\selectfont\char"0D}}}}
+
+%%<*> \PiC / \PiCTeX / \JTeX / \JLaTeX / \JBibTeX / \pTeXsT / \iTeX / \MlTeX
+\DeclareRobustCommand{\PiC}{P\kern-.12em\lower.5ex\hbox{I}\kern-.075emC}
+\DeclareRobustCommand{\PiCTeX}{\PiC\kern-.11em\TeX}
+\DeclareRobustCommand{\JTeX}{\leavevmode\lower.5ex\hbox{J}\kern-.17em\TeX}
+\DeclareRobustCommand{\JLaTeX}{\leavevmode\lower.5ex\hbox{\rm J}\kern-.17em\LaTeX}
+\DeclareRobustCommand{\JBibTeX}{$\mbox{%
+    \lower.5ex\hbox{J}\ifx\f@family\cmr\kern-.15em\else\kern-.05em\fi
+    \BibTeX}$}
+\DeclareRobustCommand{\pTeXsT}{p\kern-.21em\TeX\kern-.10em s\kern-.21em T}
+\DeclareRobustCommand{\iTeX}{\accent'27\i\TeX}
+\DeclareRobustCommand{\MlTeX}{M\kern-.1667em\lower.5ex\hbox{L}\kern-.25em\TeX}
+
+%%<*> 'dangerous' environment
+\newenvironment{dangerous}{%
+  \vspace{3pt}%
+  \begin{list}{\dangerouslabel}{%
+    \bxok@setzw
+    \setlength{\leftmargin}{3\bxok@zw}%
+    \setlength{\itemindent}{0pt}%
+    \setlength{\labelwidth}{2\bxok@zw}%
+    \setlength{\labelsep}{6pt}%
+    \setlength{\rightmargin}{0pt}%
+    \setlength{\itemsep}{0.5\baselineskip}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\topsep}{0.5\baselineskip}%
+    \setlength{\partopsep}{0pt}%
+    \setlength{\listparindent}{0\bxok@zw}%
+  }\small}{\end{list}}
+\newcommand{\dangerouslabel}{\usefont{U}{pzd}{m}{n}\char"2E }
+
+%%<*> 'namelist' environment
+\newcommand{\namelistlabel}[1]{\hspace{1\bxok@zw}#1\hfil}
+\newenvironment{namelist}[1]{%
+  \begin{list}{}{%
+    \bxok@setzw
+    \let\makelabel=\namelistlabel
+    \settowidth{\labelwidth}{#1}%
+    \addtolength{\labelwidth}{2\bxok@zw}%
+    \setlength{\leftmargin}{\labelwidth}%
+    \setlength{\labelsep}{0pt}%
+  }}{\end{list}}
+
+%%<*> 'mybibliography' environment
+\newenvironment{mybibliography}[1]{%
+   \list{\@biblabel{\@arabic\c@enumiv}}%
+        {\settowidth\labelwidth{\@biblabel{#1}}%
+         \leftmargin\labelwidth
+         \advance\leftmargin\labelsep
+         \@openbib@code
+         \@nmbrlisttrue\def\@listctr{enumiv}%
+         \let\p@enumiv\@empty
+         \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+   \sloppy
+   \clubpenalty4000
+   \@clubpenalty\clubpenalty
+   \widowpenalty4000%
+   \sfcode`\.\@m}
+  {\def\@noitemerr
+    {\@latex@warning{Empty `mybibliography' environment}}%
+   \endlist}
+
+%%<*> 'FRAME' environment
+\newenvironment{FRAME}{\begin{trivlist}\item[]
+  \hrule width\linewidth
+  \hbox to \linewidth\bgroup
+    \advance\linewidth by -30pt
+    \hsize=\linewidth
+    \vrule\hfill
+    \vbox\bgroup
+      \vskip15pt
+      \def\thempfootnote{\arabic{mpfootnote}}% changed to arabic
+      \begin{minipage}{\linewidth}}{%
+      \end{minipage}\vskip15pt
+    \egroup\hfill\vrule
+  \egroup\hrule width\linewidth
+  \end{trivlist}}
+\newcommand{\SHUTTEN}[1]{%
+  \par\nobreak\removelastskip\rightline{\small#1}\medbreak}
+
+%%<*> 'screen' environment
+\newdimen\bxok@scw
+\newbox\bxok@scbox
+\newenvironment{okuscreen}[1][1]%
+ {\def\screensc@le{#1}\bxok@scw=\linewidth \advance \bxok@scw by -20pt
+  \setbox\bxok@scbox=\hbox\bgroup\begin{minipage}[b]{\bxok@scw}}%
+ {\end{minipage}\egroup
+  \dimen0=\linewidth \removept{\dimen0}{\hsPT}%
+  \divide \dimen0 by 2 \removept{\dimen0}{\hhsPT}%
+  \dimen0=\ht\bxok@scbox \advance \dimen0 by 10pt
+  \removept{\dimen0}{\htxPT}%
+  \begin{flushleft}
+    \vspace{6.5pt}%
+    \begin{picture}(\hsPT,\htxPT)
+      \put(\hhsPT,\htxPT){\oval(\hsPT,10)[t]}
+      \put(0,0){\line(0,1){\htxPT}}
+      \put(\hsPT,0){\line(0,1){\htxPT}}
+      \put(\hhsPT,0){\oval(\hsPT,10)[b]}
+      \put(10,5){\ifdim\screensc@le pt=1pt \box\bxok@scbox
+                 \else\scalebox{\screensc@le}[1]{\box\bxok@scbox}\fi}
+    \end{picture}%
+  \end{flushleft}}
+\AtBeginDocument{%
+  \ifx\screen\@undefined
+    \let\screen\okuscreen \let\endscreen\endokuscreen
+  \fi}
+
+%%<*> 'EXAMPLE' environment, etc.
+\newdimen\EXAMPLEWIDTH
+\newenvironment{EXAMPLE}{\begin{flushleft}\EXAMPLEWIDTH=\linewidth
+  \bxok@setzw}{\end{flushleft}}
+\newenvironment{IN}{%
+  \makebox[35pt][l]{\small\fbox{\EXAMPLEinputname}}%
+  \advance \linewidth by -35pt
+  \begin{minipage}[t]{\linewidth}}{%
+  \end{minipage}\\[6pt]}
+\newenvironment{OUT}{%
+  \makebox[35pt][l]{\small\fbox{\EXAMPLEoutputname}}%
+  \advance \linewidth by -35pt
+  \begin{minipage}[t]{\linewidth}}{%
+  \end{minipage}}
+\newcommand{\INEX}{\medbreak\noindent
+  \framebox[\columnwidth][l]{\small\hskip2\bxok@zw\EXAMPLEinputname}\nobreak
+  \begin{quote}\small}
+\newcommand{\OUTEX}{\end{quote}
+  \framebox[\columnwidth][l]{\small\hskip2\bxok@zw\EXAMPLEoutputname}\nobreak
+  \begin{quotation}\small}
+\newcommand{\ENDEX}{\end{quotation}\bigbreak}
+\newcommand{\ENDEXC}[1]{\end{quotation}\nobreak
+  \begin{flushright}\footnotesize#1\end{flushright}\bigbreak}
+\newcommand{\EXAMPLEinputname}{Input}
+\newcommand{\EXAMPLEoutputname}{Output}
+
+%%<*> 'shadebox' environment
+\newdimen\shaderule \shaderule 5\p@
+\def\okushadebox{\dimen0\linewidth \advance\dimen0-20\p@
+  \advance\dimen0-2\fboxrule \advance\dimen0-\shaderule
+  \setbox\@tempboxa=\hbox\bgroup\minipage{\dimen0}}
+\def\endokushadebox{\endminipage\egroup\dimen0=10\p@ \advance\dimen0-\fboxrule
+  \setbox\@tempboxa=\hbox{\kern\dimen0\unhbox\@tempboxa\kern\dimen0}%
+  \setbox0=\vbox{\hrule\@height \fboxrule
+  \hbox{\vrule\@width \fboxrule \hskip-\fboxrule
+  \vbox{\vskip\fboxsep \box\@tempboxa\vskip\fboxsep}%
+  \hskip-\fboxrule\vrule \@width \fboxrule}\hrule \@height \fboxrule}%
+  \dimen0=\ht0 \advance\dimen0-\shaderule
+  \hbox{\hbox to \shaderule{\copy0\hss}\kern \z@
+  \vrule\@width\wd0\@height\z@\@depth\shaderule\hskip-\shaderule
+  \vrule\@width\shaderule\@height\dimen0}}
+\AtBeginDocument{%
+  \ifx\shadebox\@undefined
+    \let\shadebox\okushadebox \let\endshadebox\endokushadebox
+  \fi}
+
+%%<*> 'sankou' environment
+\def\bxok@sankoumark{{\small\sankoumark}}
+\newenvironment{sankou}{\vspace{3pt}%
+  \begin{list}{}{%
+    \bxok@setzw
+    \setlength{\leftmargin}{3\bxok@zw}%
+    \setlength{\itemindent}{0pt}%
+    \setlength{\labelwidth}{2\bxok@zw}%
+    \setlength{\labelsep}{6pt}%
+    \setlength{\rightmargin}{0pt}%
+    \setlength{\itemsep}{0pt}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\topsep}{0.5\baselineskip}%
+    \setlength{\partopsep}{0pt}%
+    \setlength{\listparindent}{0\bxok@zw}%
+  }\item[\bxok@sankoumark]\small}{\end{list}}
+\newcommand{\sankoumark}{$\star$}
+
+%%<*> 'toi' environment
+\def\bxok@toimark{{\small\toimark}}
+\newenvironment{toi}{\vspace{3pt}%
+  \begin{list}{}{%
+    \bxok@setzw
+    \setlength{\leftmargin}{3\bxok@zw}%
+    \setlength{\itemindent}{0pt}%
+    \setlength{\labelwidth}{2\bxok@zw}%
+    \setlength{\labelsep}{6pt}%
+    \setlength{\rightmargin}{0pt}%
+    \setlength{\itemsep}{0pt}%
+    \setlength{\parsep}{3pt plus 1pt minus 1pt}%
+    \setlength{\topsep}{3pt plus 1pt minus 1pt}%
+    \setlength{\partopsep}{3pt plus 6pt minus 1pt}%
+    \setlength{\listparindent}{0\bxok@zw}%
+  }\item[\bxok@toimark]\small}{\end{list}}
+\def\toimark{\bf Question}
+
+%%<*> \LEQQ / \GEQQ / \APPROX
+\def\LEQQ{\mathrel{\mathpalette\gl@align<}}
+\def\GEQQ{\mathrel{\mathpalette\gl@align>}}
+\def\gl@align#1#2{\lower.6ex\vbox{\baselineskip\z@skip\lineskip\z@
+    \ialign{$\m@th#1\hfil##\hfil$\crcr#2\crcr=\crcr}}}
+\def\APPROX{\mathrel{\mathpalette\ap@align{\smash.}}}
+\def\ap@align#1#2{\lower.2ex\vbox{\baselineskip\z@skip\lineskip\z@
+    \def\finsm@sh{\ht\z@.2ex \dp\z@.2ex \box\z@}%
+    \ialign{$\m@th#1\hfil##\hfil$\crcr#2\crcr=\crcr#2\crcr}}}
+
+%%<*> \FRAC
+%%% Fractions like 1/2 by DEK (TUGboat, 6(1):36, TeXbook (Excercise 11.6))
+\def\FRAC#1#2{\leavevmode\kern.1em
+  \raise.5ex\hbox{\the\scriptfont0 #1}\kern-.1em
+  /\kern-.15em\lower.25ex\hbox{\the\scriptfont0 #2}}
+
+%%<*> \ANGLE
+\newcommand{\ANGLE}[1]{%
+  $\langle$\kern0pt\nobreak{#1}\kern0pt\nobreak$\rangle$}
+
+%% adjustment to 'align' environment
+\@ifundefined{widebaselines}{}{%
+  \let\endmathdisplaysave=\endmathdisplay
+  \def\endmathdisplay{\widebaselines\endmathdisplaysave}}
+  \let\start@alignsave=\start@align
+  \def\start@align{\vspace{4pt}\start@alignsave}
+
+%%<*> \enableokumacroshorthands
+\def\enableokumacroshorthands{%
+\providecommand*{\eps}{\varepsilon}%
+% more is added at bxokumacj.def
+}
+
+%%------ \textmytt
+
+%% error messages
+\def\bxok@err@ivtmt{\bxok@error
+  {\string\textmytt\space can't be used in macro arguments}\@ehc}
+\def\bxok@err@bmtmt{\bxok@error
+  {argument of \string\textmytt\space must be {}-enclosed}\@ehc}
+
+%% \bxok@sp@bgroup
+% \textmytt temporarily sets catcode of { to 8 and scan the { token
+% which should come next. If the catcode of the token is not 8, then
+% the fact suggests \textmytt is inside macro arguments.
+\bgroup \catcode`\{=8 \global\let\bxok@sp@bgroup={\egroup
+
+%%<*> \textmytt
+\def\textmytt{\catcode`\{=8 \futurelet\bxok@tok \bxok@textmytt@a}
+\def\bxok@textmytt@a{\catcode`\{=1
+  % if catcode check passes, then replace {_8 with the right stuffs.
+  \ifx\bxok@tok\bxok@sp@bgroup \def\bxok@nxt##1{\bgroup\mytt}%
+  % if check fails, then...
+  \else\ifx\bxok@tok\bgroup
+    % if I'm e-TeX then try to recover with \scantokens
+    \ifbxok@etex \let\bxok@nxt\bxok@textmytt@b
+    \else \def\bxok@nxt##1{\bxok@err@ivtmt}\fi
+  % \textmytt is not followed by {
+  \else \def\bxok@nxt{\bxok@err@bmtmt}%
+  \fi\fi \bxok@nxt}
+% It passes the argument of \textmytt to \scantokens.
+\def\bxok@textmytt@b{\afterassignment\bxok@textmytt@c\def\bxok@tmpa}
+\def\bxok@textmytt@c{%
+  \edef\bxok@tmpa{\bgroup\noexpand\mytt
+    \unexpanded\expandafter{\bxok@tmpa}\egroup}%
+  \scantokens\expandafter{\bxok@tmpa}}
+
+%%------ load Japanese-related components
+
+\@tempswafalse
+\ifbxok@xetex \@tempswatrue \fi
+\ifbxok@ptex \@tempswatrue \fi
+\if@tempswa \input{bxokumacj.def} \fi
+
+%%------ all done
+\endinput
+%% EOF

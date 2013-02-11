@@ -1,0 +1,12 @@
+ライセンス
+----------
+
+ライセンスについては原版と同一のものとし、改変部分に関して、その著作者で
+ある「八登 崇之（別名 ZR）」は何の権利も主張しない。従って、ライセンスは
+以下のようになる。
+
+  - bxascmac パッケージ： 修正 BSD ライセンス  
+    原版(ascmac)の著作者は「ASCII Corporation & Impress Corporation」
+    (tascmac.sty の著作権表示による)。
+  - bxjsverb, bxokumacro パッケージ： 修正 BSD ライセンス  
+    原版(jsverb, okuverb, okumacro)の著作者は奥村晴彦氏。

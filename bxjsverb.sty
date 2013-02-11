@@ -1,0 +1,315 @@
+%
+% bxjsverb.sty
+%
+
+% COPYRIGHT NOTICE:
+%   This package is a modified version of jsverb.sty, authored by
+%   Haruhiko Okumura.
+%   This package is distributed under the modified BSD license
+%   (the same as the original package).
+
+%%%% package declaration
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bxjsverb}[2009/12/14 v0.2]
+
+%%%% preparation
+\def\bxjv@pkgname{bxjsverb}
+\def\bxjv@error{\PackageError\bxjv@pkgname}
+\def\bxjv@@OTI{OT1}
+\def\bxjv@@TI{T1}
+\let\bxjv@hook\@empty
+\let\bxjv@hook@star\@empty
+\newdimen\bxjv@charwd
+\newif\ifbxjv@xetex
+\newif\ifbxjv@ptex
+
+%%%% option handling
+\let\bxjv@bslmode\relax
+\DeclareOption{yen}{\let\bxjv@bslmode=y}
+\DeclareOption{fakebsl}{\let\bxjv@bslmode=f}
+\DeclareOption{cmttbsl}{\let\bxjv@bslmode=c}
+\let\bxjv@vspmode\relax
+\DeclareOption{fakevsp}{\let\bxjv@vspmode=f}
+\DeclareOption{cmttvsp}{\let\bxjv@vspmode=c}
+\newif\ifbxjv@ascii \bxjv@asciifalse
+\DeclareOption{ascii}{\bxjv@asciitrue}
+\DeclareOption{noascii}{\bxjv@asciifalse}
+\ProcessOptions*
+
+%%------ preliminary stuffs
+
+%% detect TeX engine
+\def\bxjv@testfeat#1#2{%
+  \edef\bxjv@tmpa{\string#1}\edef\bxjv@tmpb{\meaning#1}%
+  \ifx\bxjv@tmpa\bxjv@tmpb #2\fi}
+\bxjv@testfeat\XeTeXversion\bxjv@xetextrue
+\bxjv@testfeat\tbaselineshift\bxjv@ptextrue
+%\bxjv@testfeat\enablecjktoken\bxjv@uptextrue
+
+%% \bxProvideTextCommand
+\def\bxProvideTextCommand#1#2#3{%
+  \expandafter\ifx\csname #2\string#1\endcsname\relax
+    \DeclareTextCommand{#1}{#2}{#3}\fi}
+
+%% \bxjv@noautoxspacing
+% This is \autoxspacing if available, otherwise \relax.
+\ifx\noautoxspacing\@undefined
+       \let\bxjv@noautoxspacing\relax
+\else  \let\bxjv@noautoxspacing\noautoxspacing \fi
+
+%% \ifbxjv@fontchar
+% This is \iffontchar if available, otherwise \iffalse. Since it is
+% always an \if-token, it can be safely put inside \if-blocks.
+% Moreover, a trick is used in the following definition so that it
+% itself could be put inside \if-blocks.
+{\expandafter\ifx\csname iffontchar\endcsname\relax
+       {\catcode`\|=0 |global|let|ifbxjv@fontchar|iffalse}
+ \else {\catcode`\|=0 |global|let|ifbxjv@fontchar|iffontchar}
+ \fi}
+
+%% \bxjv@cmtt@char
+% Prints with cmtt as fallback
+\DeclareFontFamily{OT1}{jvcmtt}{}
+\DeclareFontShape{OT1}{jvcmtt}{m}{n}{<->cmtt10}{}
+\def\bxjv@cmtt@char#1{%
+  {\leavevmode\hb@xt@\bxjv@charwd
+   {\hss\usefont{OT1}{jvcmtt}{m}{n}\char#1\hss}}}
+
+% If T1 encoding is already declared for use but TS1 is not,
+% then load the TS1 definiton file. This ensures that \textyen
+% is defined in TS1.
+\AtBeginDocument{%
+  \expandafter\ifx\csname T@T1\endcsname\relax \else
+    \expandafter\ifx\csname T@TS1\endcsname\relax
+      \input{ts1enc.def}%
+  \fi\fi
+}
+
+%%<*> \yen
+% This is expanded to \textyen, and here \textyen will be defined
+% for OT1, T1 and EU1. In OT1, a composed glyph is used; in T1, the
+% TS1 definition is used (ts1enc is already loaded); in EU1, the
+% character U+00A5 is used.
+% Note that the textcomp package sets to TS1 the default encoding
+% of this character.
+\AtBeginDocument{%
+  \bxProvideTextCommand{\textyen}{OT1}{{\ooalign{Y\crcr\hss=\hss}}}%
+  \bxProvideTextCommand{\textyen}{T1}{\UseTextSymbol{TS1}{\textyen}}%
+  \expandafter\ifx\csname T@EU1\endcsname\relax\else
+    \DeclareTextSymbol{\bx@m@synth@yen}{EU1}{"00A5}\fi
+  \providecommand*{\yen}{\textyen}%
+}
+
+%%<*> \ttyen
+% \ttyen is \bx@m@synth@yen in \ttfamily. \bx@m@synth@yen uses the
+% definition in TS1 as default except in OT1 and EU1.
+\def\ttyen{{\ttfamily\bx@m@synth@yen}}
+\DeclareTextCommand{\bx@m@synth@yen}{OT1}{Y\llap=}
+\DeclareTextCommand{\bx@m@synth@yen}{T1}{\UseTextSymbol{TS1}{\textyen}}%
+\DeclareTextSymbolDefault{\bx@m@synth@yen}{T1}
+\AtBeginDocument{%
+  \expandafter\ifx\csname T@EU1\endcsname\relax\else
+    \DeclareTextSymbol{\bx@m@synth@yen}{EU1}{"00A5}\fi
+}
+
+%%<*> \ttbslash
+\def\ttbslash{{\ttfamily\char`\\}}
+%{\escapechar\m@ne\xdef\bxjv@tok@bs{\string\\}}
+
+%% \bxBSOrYen
+\if y\bxjv@bslmode  \def\bxBSOrYen{\bx@m@synth@yen}%
+\else \chardef\bxBSOrYen=`\\ \fi
+
+%%<*> \BS
+\AtBeginDocument{%
+\providecommand*{\BS}{{\ttfamily\bxBSOrYen}}
+}
+
+%% \bxjv@cmd@bslash
+% Invoked by <\> in verbatim.
+\if y\bxjv@bslmode      % yen
+  \let\bxjv@cmd@bslash\bx@m@synth@yen
+\else\if f\bxjv@bslmode % fakebsl
+  \def\bxjv@cmd@bslash{\reflectbox{/}}
+  \AtBeginDocument{%
+    \@ifpackageloaded{graphics}{}%
+     {\bxjv@error{Package graphicx required}\@ehc}}
+\else\if c\bxjv@bslmode % cmttbsl
+  \def\bxjv@cmd@bslash{\bxjv@cmtt@char{`\\}}
+\fi\fi\fi
+
+%% \bxjv@cmd@space
+% Invoked by a space character in *-version verbatim.
+\if x\bxjv@vspmode      % XeTeX normal
+  \def\bxjv@cmd@space{\bxjv@xetex@vsp}
+\else\if f\bxjv@vspmode % fakevsp
+  \def\bxjv@cmd@space{%
+    \lower0.2\bxjv@charwd\hb@xt@\bxjv@charwd{\kern0.1\bxjv@charwd
+    \vrule\@width0.1\bxjv@charwd\@height0.4\bxjv@charwd
+    \vrule\@width0.6\bxjv@charwd\@height0.14\bxjv@charwd
+    \vrule\@width0.1\bxjv@charwd\@height0.4\bxjv@charwd
+    \hfil}}
+\else\if c\bxjv@vspmode % cmttbsl
+  \def\bxjv@cmd@space{\bxjv@cmtt@char{`\ }}
+\fi\fi\fi
+
+%%------ revision to verbatim
+
+%% \verbatim@font
+\def\verbatim@font{\ttfamily}
+
+%%<*> \verbatimleftmargin (length)
+\newdimen\verbatimleftmargin
+\ifbxjv@ptex \verbatimleftmargin=2zw
+\else\ifx\Cwd\@undefined  \verbatimleftmargin=2em
+\else \verbatimleftmargin=2\Cwd
+\fi\fi
+
+%%<*> \verbatimsize
+\def\verbatimsize{\fontsize{9}{11pt}\selectfont}
+
+%% hook: measure the character width in the current font
+\g@addto@macro\bxjv@hook{%
+  {\setbox\z@\hbox{n}\xdef\bxjv@nxt{\bxjv@charwd=\the\wd\z@}}%
+  \bxjv@nxt}
+
+%% hook: <\> character
+\if \bxjv@bslmode\relax \else
+  {\catcode`\|=0  \catcode`\\=13
+   |g@addto@macro|bxjv@hook{|catcode`|\=13 |let\=|bxjv@cmd@bslash}}
+\fi
+
+%% hook: < > character
+\if \bxjv@vspmode\relax \else
+\begingroup\catcode`\ \active
+\g@addto@macro\bxjv@hook@star{%
+\catcode`\ \active\let \bxjv@cmd@space}%
+\endgroup
+\fi
+
+%% \bxjv@hook@quote
+\ifbxjv@ascii
+  \def\bxjv@hook@quote{%
+    \@tempswafalse
+    \ifbxjv@xetex \ifnum\XeTeXfonttype\font>\z@
+      \@tempswatrue
+    \fi\fi
+    \if@tempswa
+      \def\@lq{\bxjv@dchar{`\`}}\def\@rq{\bxjv@dchar{`\'}}%
+      \bxjv@hook@quote@a
+    \else\ifx\f@encoding\bxjv@@OTI
+      \chardef\@lq=18 \chardef\@rq=13 \bxjv@hook@quote@a
+    \else\ifx\f@encoding\bxjv@@TI
+      \def\@rq{\UseTextSymbol{TS1}{\textquotesingle}}%
+      \chardef\@lq=0 \bxjv@hook@quote@a
+    \fi\fi\fi}
+  \begingroup \catcode`\'=13 \catcode`\`=13
+    \gdef\bxjv@hook@quote@a{%
+      \catcode39=13 \let'=\@rq \catcode96=13 \let`=\@lq}
+  \endgroup
+  \g@addto@macro\bxjv@hook\bxjv@hook@quote
+\fi
+
+%% revise \verb
+\def\verb{%
+  \leavevmode\hbox
+  \bgroup
+    \verb@eol@error \let\do\@makeother \dospecials
+    \verbatim@font \bxjv@hook@font \@noligs
+    \bxjv@noautoxspacing \bxjv@hook
+    \@ifstar\bxjv@sverb\@verb}
+\def\bxjv@sverb{\bxjv@hook@star\@sverb}
+\let\bxjv@verb\verb % saved
+
+%% revise \[verbatim*]
+\def\bxjv@verbatim@s{\@verbatim\bxjv@hook@star\@sxverbatim}
+\expandafter\let\csname verbatim*\endcsname\bxjv@verbatim@s
+
+%% revise \@xverbatim \@sxverbatim
+\if\bxjv@bslmode\relax\else
+  \begingroup \catcode`|=0 \catcode`[= 1
+    \catcode`]=2 \catcode`\{=12 \catcode`\}=12
+    \catcode`\\=13 |gdef|@xverbatim#1\end{verbatim}[#1|end[verbatim]]
+    |gdef|@sxverbatim#1\end{verbatim*}[#1|end[verbatim*]]
+  |endgroup
+\fi
+
+%% revise \@verbatim
+\def\@verbatim{%
+  \trivlist \item\relax
+  \if@minipage
+    \verbatimsize
+  \else
+    \vskip\baselineskip
+    \vskip-\f@size pt
+    \verbatimsize
+    \vskip-\baselineskip
+    \vskip\f@size pt
+    \vskip\parskip
+  \fi
+  \leftskip\@totalleftmargin
+  \if@minipage \else
+    \advance \leftskip \verbatimleftmargin
+  \fi
+  \rightskip\z@skip
+  \parindent\z@
+  \parfillskip\@flushglue
+  \parskip\z@skip
+  \@@par
+  \@tempswafalse
+  \def\par{%
+    \if@tempswa
+      \leavevmode \null \@@par\penalty\interlinepenalty
+    \else
+      \@tempswatrue
+      \ifhmode\@@par\penalty\interlinepenalty\fi
+    \fi}%
+  \let\do\@makeother \dospecials
+  \obeylines \verbatim@font \bxjv@hook@font \@noligs
+  \bxjv@noautoxspacing \bxjv@hook
+  \hyphenchar\font\m@ne
+  \everypar \expandafter{\the\everypar \unpenalty}%
+}
+
+%% \bxjv@hook@font
+\def\bxjv@hook@font{%
+  \edef\bxjv@tmpa{\f@encoding/\f@family}%
+  \ifx\bxjv@tmpa\bxjv@@OTI@lmtt % avoid OT1/lmtt
+    \fontencoding{T1}\selectfont\fi}
+\def\bxjv@@OTI@lmtt{OT1/lmtt}
+
+%%------ XeTeX something
+\ifbxjv@xetex
+
+%% \bxjv@dchar{<code>}
+% Circumvents TECKit mapping in XeTeX.
+\def\bxjv@dchar#1{\XeTeXglyph\XeTeXcharglyph#1\relax}
+
+%% \bxjv@xetex@vsp
+\chardef\bxjv@visispace="2423
+\DeclareTextCommand{\bxjv@xetex@vsp}{OT1}{\bxjv@cmtt@char{`\ }}
+\DeclareTextSymbolDefault{\bxjv@xetex@vsp}{OT1}
+\AtBeginDocument{%
+\expandafter\ifx\csname T@EU1\endcsname\relax\else
+  \DeclareTextCommand{\bxjv@xetex@vsp}{EU1}{%
+    \ifbxjv@fontchar\font\bxjv@visispace \bxjv@visispace
+    \else \bxjv@cmtt@char{`\ }\fi}%
+\fi}
+
+
+% Note: xltxtra redefines verbatim components as follows:
+%   \def\verb{...}
+%   \AtBeginDocument{\xxt@patch@verbatim}
+%   \def\xxt@patch@verbatim{\@namedef{verbatim*}{...}}
+\AtBeginDocument{%
+  % revert the modification by xltxtra
+  \let\verb\bxjv@verb
+  \expandafter\let\csname verbatim*\endcsname\bxjv@verbatim@s
+  % and cancel the future modification
+  \let\xxt@patch@verbatim\relax
+}
+
+\fi
+%%------ all done
+\endinput
+%% EOF

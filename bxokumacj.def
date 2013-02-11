@@ -1,0 +1,147 @@
+%
+% bxokumacj.def
+%
+
+%%%% file declaration
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesFile{bxokumacj.def}[2009/12/14]
+
+%%------ preliminary definitions
+
+%% check the encoding of this file
+\def\bxok@err@ivpke{\bxok@error{This file is in wrong encoding}%
+  \@ehc\endinput}
+{\csname forcecjktoken\endcsname
+\def\bxok@test@enc#1#2#3#4\@nil{\gdef\bxok@nxt{#4}}
+\bxok@test@enc ×.\bxok@err@ivpke\@nil}\bxok@nxt
+
+%% environment judge
+\newif\ifbxok@zxjatype
+\@ifpackageloaded{zxjatype}{\bxok@zxjatypetrue}{}
+\newif\ifbxok@bxjsclass
+\ifx\jsDocClass\@undefined\else \bxok@bxjsclasstrue \fi
+\newif\ifbxok@jaskipok
+
+%% redefine helper macros
+\ifbxok@ptex
+  \def\bxok@setzw{\bxok@zw=1zw\relax}
+  \bxok@jaskipoktrue
+  \def\bxok@iiskip{\hskip\kanjiskip}
+  \def\bxok@setiiglue#1{\kanjiskip=#1\relax}
+  \def\bxok@iaiskip{\hskip\xkanjiskip}
+  \def\bxok@setiaiglue#1{\kanjiskip=#1\relax}
+  \def\bxok@inhibitglue{\inhibitglue}
+  \def\bxok@noautoxspacing{\noautoxspacing}
+\else\ifbxok@zxjatype
+  \def\bxok@setzw{\bxok@zw=\zxjt@scale em\relax}
+  \bxok@jaskipoktrue
+  \def\bxok@iiskip{\CJKglue}
+  \def\bxok@setiiglue#1{\def\CJKglue{\hskip#1\relax}}
+  \def\bxok@iaiskip{\CJKecglue}
+  \def\bxok@setiaiglue#1{\def\CJKecglue{\hskip#1\relax}}
+  \def\bxok@inhibitglue{\CJKinhibitglue}
+\else\ifbxok@xetex
+  %\def\bxok@setzw{\bxok@zw=1em\relax}
+  \ifbxok@bxjsclass
+  \def\bxok@setzw{\bxok@zw=\jsZw\relax}
+  \def\bxok@inhibitglue{\jsInhibitGlue}
+  \fi
+\fi\fi\fi
+
+
+%%------ main
+
+%% \kenten
+\def\kenten#1{%
+  \ifvmode\leavevmode\else\bxok@iiskip\fi
+  \bxok@setzw
+  \setbox\@ne=\hb@xt@\z@{・\hss}\ht\@ne=.63\bxok@zw
+  \bxok@kenten#1\end}
+\def\bxok@kenten#1{%
+  \ifx#1\end \let\next=\relax \else
+    \raise.63\bxok@zw\copy\@ne\nobreak#1\bxok@iiskip\relax
+    \let\next=\bxok@kenten
+  \fi\next}
+
+%% \kintou
+\ifbxok@jaskipok
+\newcommand{\kintou}[2]{%
+  \leavevmode\hb@xt@#1{%
+    \bxok@setiiglue{0pt plus 1fil minus 1fil}%
+    \bxok@setiaiglue{0pt plus 1fil minus 1fil}%
+    #2}}
+\fi
+
+%% \曜
+\def\曜{\bxDayOfWeek\edef\bxok@nxt
+  {\ifcase \bxRes\space 日\or 月\or 火\or 水\or 木\or 金\or 土\fi}%
+  \bxok@nxt}
+
+%% \挨拶
+% I don't care whether or not this is useful....
+\def\挨拶{\noindent\bxok@setzw 拝啓\hspace{1\bxok@zw}%
+  \edef\bxok@nxt{\ifcase\month\or
+   厳寒\or 春寒\or 早春\or 陽春\or 新緑\or 向暑\or
+   猛暑\or 残暑\or 初秋\or 仲秋\or 晩秋\or 初冬\fi}%
+  \bxok@nxt の候，ますますご清栄のこととお喜び申し上げます。}
+
+%% change labels
+% EXAMPLE
+\renewcommand{\EXAMPLEinputname}{入力}
+\renewcommand{\EXAMPLEoutputname}{出力}
+% sankou
+\renewcommand{\sankoumark}{★}
+% toi
+\renewcommand{\toimark}{\bf 【問】}
+
+
+%% addition to \enableokumacroshorthands when using pTeX
+\ifbxok@ptex
+\g@addto@macro\enableokumacroshorthands{%
+\providecommand*{\hk}{\hspace{\kanjiskip}}%
+\providecommand*{\hx}{\hspace{\xkanjiskip}}%
+\providecommand*{\3}{\penalty300 }%
+\providecommand*{\5}{\penalty50 }%
+\newcommand{\株}{\hspace{\kanjiskip}\<（株）\<\hspace{\kanjiskip}}
+}
+\fi
+
+%%------ double-width dash
+\begingroup
+\catcode`\"=12 \catcode`\!=12
+%% \bxok@litchardef\CS{<jis_code>}{<unicode>}
+% Defines \CS to be a macro that expands to a single Unicode letter.
+\ifbxok@uptex
+\forcecjktoken
+\def\bxok@litchardef#1#2#3{%
+  {\kansujichar1=#3\xdef\bxok@gtmp{\kansuji1}}\let#1\bxok@gtmp}
+\else\ifbxok@ptex
+\def\bxok@litchardef#1#2#3{%
+  \ifnum#2>\z@
+    {\kansujichar1=\jis#2\xdef\bxok@gtmp{\kansuji1}}\let#1\bxok@gtmp
+  \else \let#1\@empty \fi}
+\else\ifbxok@xetex
+\def\bxok@litchardef#1#2#3{%
+  {\lccode`\!=#3\lowercase{\gdef\bxok@gtmp{!}}}\let#1\bxok@gtmp}
+\fi\fi\fi
+\bxok@litchardef\bxok@lch@min{"0000}{"2212}
+\bxok@litchardef\bxok@lch@fmi{"215D}{"FF0D}
+\bxok@litchardef\bxok@lch@mda{"0000}{"2014}
+\bxok@litchardef\bxok@lch@qda{"213D}{"2015}
+\def\bxok@defddash#1#2{%
+  \edef\bxok@args{{\expandafter\noexpand\csname#1#1\endcsname}%
+    {\expandafter\noexpand\csname#1\endcsname}{#1}{#2}}%
+  \expandafter\bxok@defddash@a\bxok@args}
+\def\bxok@defddash@a#1#2#3#4{\if_#3_\else
+  \gdef#1{\bxok@ddash{#4}}\gdef#2#3{\bxok@ddash{#4}}\fi}
+\gdef\bxok@ddash#1{\bxok@setzw#1\kern-.5\bxok@zw #1\kern-.5\bxok@zw #1}
+\ifbxok@ptex \gdef\bxok@ddash#1{#1\kern-.5zw #1\kern-.5zw #1}\fi
+\bxok@defddash\bxok@lch@min\bxok@lch@qda
+\bxok@defddash\bxok@lch@fmi\bxok@lch@qda
+\bxok@defddash\bxok@lch@mda\bxok@lch@qda
+\bxok@defddash\bxok@lch@qda\bxok@lch@qda
+
+\endgroup
+%%------ all done
+\endinput
+%% EOF
