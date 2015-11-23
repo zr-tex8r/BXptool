@@ -10,15 +10,18 @@
 
 %%%% package declaration
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{bxokumacro}[2009/12/14 v0.2]
+\ProvidesPackage{bxokumacro}[2015/11/23 v0.4]
 
 %%%% preparation
 \def\bxok@pkgname{bxokumacro}
 \def\bxok@error{\PackageError\bxok@pkgname}
+\providecommand\bxDebug[1]{}
 \newif\ifbxok@etex
 \newif\ifbxok@xetex
+\newif\ifbxok@luatex
 \newif\ifbxok@ptex
 \newif\ifbxok@uptex
+\newif\ifbxok@bxjsstandard
 
 %%%% option handling
 %\let\bxok@bslmode\relax
@@ -33,8 +36,12 @@
   \ifx\bxok@tmpa\bxok@tmpb #2\fi}
 \bxok@testfeat\eTeXversion\bxok@etextrue
 \bxok@testfeat\XeTeXversion\bxok@xetextrue
+\bxok@testfeat\luatexversion\bxok@luatextrue
 \bxok@testfeat\tbaselineshift\bxok@ptextrue
 \bxok@testfeat\enablecjktoken\bxok@uptextrue
+\expandafter\ifx\csname ver@bxjsja-standard.def\endcsname\relax\else
+  \bxok@bxjsstandardtrue
+\fi
 
 %% \bxok@setzw
 \newdimen\bxok@zw
@@ -554,7 +561,9 @@
 
 \@tempswafalse
 \ifbxok@xetex \@tempswatrue \fi
+\ifbxok@luatex \@tempswatrue \fi
 \ifbxok@ptex \@tempswatrue \fi
+\ifbxok@bxjsstandard \@tempswatrue \fi
 \if@tempswa \input{bxokumacj.def} \fi
 
 %%------ all done

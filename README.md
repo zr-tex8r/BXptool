@@ -3,9 +3,9 @@ BXptool パッケージバンドル
 
 (This file is encoded in UTF-8,)
 
-pLaTeX 用のパッケージについて、欧文 LaTeX／XeLaTeX でも使用可能な改変版を
+pLaTeX 用のパッケージについて、他のエンジンでも使用可能な改変版を
 作る試みである。特に和文処理に関係ない機能はそのまま取り込み、和文に関連
-するものは XeLaTeX での対応を試みる。  
+するものは、他の日本語対応 LaTeX 環境での対応を試みる。  
 （pLaTeX 系でも使用可能。）
 
 ### パッケージ一覧
@@ -16,7 +16,16 @@ pLaTeX 用のパッケージについて、欧文 LaTeX／XeLaTeX でも使用�
 
 ### 前提環境
 
-  - 処理系： LaTeX 汎用
+  - TeX エンジン： pdfTeX / XeTeX / LuaTeX / pTeX / upTeX
+      - e-TeX 拡張は必須でない
+  - フォーマット： LaTeX
+  - DVI ウェア： 不問
+  - 必須パッケージ： bxokumacro の日本語に関連する一部の機能については
+    以下の何れかの環境を必要とする。
+      - pLaTeX / upLaTeX
+      - XeLaTeX + zxjatype
+      - LuaLaTeX + LuaTeX-ja
+      - pdfLaTeX + BXjscls のクラスの standard ドライバ指定
 
 ### インストール
 
@@ -45,12 +54,17 @@ W32TeX を C:\usr\local にインストールした場合は次のようにな�
 更新履歴
 --------
 
-  * Version 0.3  <2013/02/13>
-      - pict2e に対応させた
-      - 角丸四角枠を描く際の線のパラメタが何故か理想値から外れていた
-        のを一致させた。
+  * Version 0.4  [2015/11/23]
+      - bxokumacro: 他の日本語 LaTeX 環境に対応させた。（詳細は
+        「前提環境」の節を参照。）また、XeLaTeX で xeCJK 3.x 系を使用
+        する場合にも対応させた。
 
-  * Version 0.2  <2009/12/14>
+  * Version 0.3  [2013/02/13]
+      - bxascmac: pict2e に対応させた
+      - bxascmac: 角丸四角枠を描く際の線のパラメタが何故か理想値から
+        外れていたのを一致させた。
+
+  * Version 0.2  [2009/12/14]
       - 最初の公開版
 
 --------------------
